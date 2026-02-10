@@ -25,15 +25,3 @@ Reformat name lists for CIE remembrance mass: **surname first**, then first name
 | Tom Doyle | Doyle, Tom |
 
 Supports nicknames in parentheses, titles (Fr., Mr., Mrs.), compound surnames (e.g. O'Shea, St. Devlin, Gray Snr.), and both year ranges (1927 - 2008) and “Died DD/MM/YYYY” at the end.
-
-## GitHub Pages
-
-To publish this repo as a site:
-
-1. Push this project to a new repo (e.g. `surnames-first`) under [github.com/gally74](https://github.com/gally74).
-2. In the repo: **Settings → Pages**.
-3. Under **Source**, choose **Deploy from a branch**.
-4. Branch: **main**, folder: **/ (root)**. Save.
-5. The site will be at `https://gally74.github.io/surnames-first/`.
-
-No server or build step—just `index.html` in the browser.

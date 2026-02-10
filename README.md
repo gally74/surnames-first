@@ -18,11 +18,11 @@ Reformat name lists for CIE remembrance mass: **surname first**, then first name
 
 | You paste | You get |
 |-----------|--------|
-| Aidan Ridgway 1927 - 2008 | Ridgway, Aidan 1927 - 2008 |
-| Daniel (Paul) Houlihan 1928 - 2015 | Houlihan, Daniel (Paul) 1928 - 2015 |
-| Fr. Jack Fennelly | Fennelly, Fr. Jack |
-| Brendan O'Shea - Died 11/01/1987 | O'Shea, Brendan - Died 11/01/1987 |
-| Brid Martin | Martin, Brid |
+| John Smith 1927 - 2008 | Smith, John 1927 - 2008 |
+| Mary (Molly) Jones 1928 - 2015 | Jones, Mary (Molly) 1928 - 2015 |
+| Fr. Pat Murphy | Murphy, Fr. Pat |
+| Anne O'Brien - Died 11/01/1987 | O'Brien, Anne - Died 11/01/1987 |
+| Tom Doyle | Doyle, Tom |
 
 Supports nicknames in parentheses, titles (Fr., Mr., Mrs.), compound surnames (e.g. O'Shea, St. Devlin, Gray Snr.), and both year ranges (1927 - 2008) and “Died DD/MM/YYYY” at the end.
 

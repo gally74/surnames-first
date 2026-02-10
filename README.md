@@ -1,5 +1,7 @@
 # Surnames First
 
+Created by **Roy Galvin**.
+
 Reformat name lists for CIE remembrance mass: **surname first**, then first name(s), with any birth/death or “Died” dates unchanged at the end.
 
 **Live page:** [https://gally74.github.io/surnames-first/](https://gally74.github.io/surnames-first/)

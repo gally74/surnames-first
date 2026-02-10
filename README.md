@@ -18,22 +18,7 @@ Reformat name lists for CIE remembrance mass: **surname first**, then first name
 
 | You paste | You get |
 |-----------|--------|
-| Aidan Ridgway 1927 - 2008 | Ridgway, Aidan 1927 - 2008 |
-| Daniel (Paul) Houlihan 1928 - 2015 | Houlihan, Daniel (Paul) 1928 - 2015 |
-| Fr. Jack Fennelly | Fennelly, Fr. Jack |
-| Brendan O'Shea - Died 11/01/1987 | O'Shea, Brendan - Died 11/01/1987 |
-| Brid Martin | Martin, Brid |
+| Joe Bloggs 1999 - 2008 | Bloggs, Joe 1999 - 2008 |
+
 
 Supports nicknames in parentheses, titles (Fr., Mr., Mrs.), compound surnames (e.g. O'Shea, St. Devlin, Gray Snr.), and both year ranges (1927 - 2008) and “Died DD/MM/YYYY” at the end.
-
-## GitHub Pages
-
-To publish this repo as a site:
-
-1. Push this project to a new repo (e.g. `surnames-first`) under [github.com/gally74](https://github.com/gally74).
-2. In the repo: **Settings → Pages**.
-3. Under **Source**, choose **Deploy from a branch**.
-4. Branch: **main**, folder: **/ (root)**. Save.
-5. The site will be at `https://gally74.github.io/surnames-first/`.
-
-No server or build step—just `index.html` in the browser.

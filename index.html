@@ -129,6 +129,11 @@
     <label for="input">Paste names from Word (one per line, or paste as copied—merged lines are split automatically)</label>
     <textarea id="input" placeholder="John Smith 1927 - 2008&#10;Mary (Molly) Jones 1930 - 2015&#10;Fr. Pat Murphy&#10;Anne Doyle"></textarea>
 
+    <label class="option-label" style="margin-top:0.75rem;">
+      <input type="checkbox" id="includeYears">
+      Include years and dates in result
+    </label>
+
     <div class="actions">
       <button type="button" class="primary" id="reformat">Reformat text</button>
       <button type="button" class="secondary" id="copy" disabled>Copy result</button>
@@ -218,19 +223,21 @@
         return { first, surname };
       }
 
-      function formatLine(line) {
+      function formatLine(line, includeYears) {
         const trimmed = line.trim();
         if (!trimmed) return '';
         const { namePart, suffix } = extractSuffix(trimmed);
+        const useSuffix = includeYears ? suffix : '';
         const { first, surname } = parseNamePart(namePart);
         if (!surname) return trimmed;
-        if (!first) return surname + suffix;
-        return surname + ', ' + first + suffix;
+        if (!first) return surname + useSuffix;
+        return surname + ', ' + first + useSuffix;
       }
 
       function runReformatOnText(text) {
+        const includeYears = document.getElementById('includeYears').checked;
         const lines = splitMergedLines(text);
-        return lines.map(formatLine).filter(Boolean).join('\n');
+        return lines.map(function (line) { return formatLine(line, includeYears); }).filter(Boolean).join('\n');
       }
 
       function reformat() {

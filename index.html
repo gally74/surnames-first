@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Surnames First – CIE Remembrance List Reformat</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --accent: #0f3460;
+      --text: #e8e8e8;
+      --muted: #a0a0a0;
+      --highlight: #e94560;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      padding: 1.5rem;
+      line-height: 1.5;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      color: var(--text);
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      color: var(--text);
+      resize: vertical;
+    }
+    textarea::placeholder { color: var(--muted); }
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin: 1rem 0;
+      flex-wrap: wrap;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.95rem;
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button.primary {
+      background: var(--highlight);
+      color: #fff;
+    }
+    button.primary:hover { filter: brightness(1.1); }
+    button.secondary {
+      background: var(--accent);
+      color: var(--text);
+    }
+    button.secondary:hover { filter: brightness(1.15); }
+    .output-wrap {
+      margin-top: 1rem;
+    }
+    .output-wrap textarea {
+      min-height: 160px;
+    }
+    .copy-hint {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Surnames First</h1>
+    <p class="subtitle">Reformat name lists for CIE remembrance mass – surname first, then first name(s), dates unchanged.</p>
+
+    <label for="input">Paste names from Word (one per line)</label>
+    <textarea id="input" placeholder="Aidan Ridgway 1927 - 2008&#10;Daniel (Paul) Houlihan 1928 - 2015&#10;Fr. Jack Fennelly&#10;Brid Martin"></textarea>
+
+    <div class="actions">
+      <button type="button" class="primary" id="reformat">Reformat</button>
+      <button type="button" class="secondary" id="copy" disabled>Copy result</button>
+    </div>
+
+    <div class="output-wrap">
+      <label for="output">Result – copy and paste back into Word</label>
+      <textarea id="output" readonly placeholder="Reformatted lines appear here…"></textarea>
+      <p class="copy-hint">Use the Copy result button, then paste into your Word document.</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const inputEl = document.getElementById('input');
+      const outputEl = document.getElementById('output');
+      const reformatBtn = document.getElementById('reformat');
+      const copyBtn = document.getElementById('copy');
+
+      // Match trailing date suffix: "1927 - 2008" or " - Died 11/01/1987" (hyphen or en-dash)
+      const YEAR_RANGE_AT_END = new RegExp('\\s+(\\d{4}\\s*[–\\-]\\s*\\d{4})\\s*$');
+      const DIED_AT_END = new RegExp('(\\s+[–\\-]\\s*Died\\s+\\d{1,2}/\\d{1,2}/\\d{4})\\s*$', 'i');
+
+      function extractSuffix(line) {
+        let rest = line.trim();
+        let suffix = '';
+        const diedMatch = rest.match(DIED_AT_END);
+        if (diedMatch) {
+          suffix = diedMatch[1];
+          rest = rest.slice(0, -diedMatch[1].length).trim();
+        }
+        const yearMatch = rest.match(YEAR_RANGE_AT_END);
+        if (yearMatch) {
+          suffix = (suffix ? ' ' : '') + yearMatch[1].trim() + suffix;
+          rest = rest.slice(0, -yearMatch[1].length).trim();
+        }
+        return { namePart: rest, suffix: suffix ? ' ' + suffix.trim() : '' };
+      }
+
+      function parseNamePart(namePart) {
+        if (!namePart) return { first: '', surname: '' };
+        const words = namePart.split(/\s+/);
+        if (words.length === 1) return { first: '', surname: words[0] };
+        let surname;
+        const last = words[words.length - 1];
+        const secondLast = words[words.length - 2];
+        if (words.length >= 2 && (secondLast === 'St.' || /^(Snr\.|Jr\.)$/i.test(last))) {
+          surname = secondLast + ' ' + last;
+          words.pop();
+          words.pop();
+        } else {
+          surname = last;
+          words.pop();
+        }
+        const first = words.join(' ');
+        return { first, surname };
+      }
+
+      function formatLine(line) {
+        const trimmed = line.trim();
+        if (!trimmed) return '';
+        const { namePart, suffix } = extractSuffix(trimmed);
+        const { first, surname } = parseNamePart(namePart);
+        if (!surname) return trimmed;
+        if (!first) return surname + suffix;
+        return surname + ', ' + first + suffix;
+      }
+
+      function reformat() {
+        const text = inputEl.value || '';
+        const lines = text.split(/\r?\n/);
+        const result = lines
+          .map(formatLine)
+          .filter(Boolean)
+          .join('\n');
+        outputEl.value = result;
+        copyBtn.disabled = !result;
+      }
+
+      function copyResult() {
+        if (!outputEl.value) return;
+        outputEl.select();
+        outputEl.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(outputEl.value).then(function () {
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function () { copyBtn.textContent = 'Copy result'; }, 2000);
+        });
+      }
+
+      reformatBtn.addEventListener('click', reformat);
+      copyBtn.addEventListener('click', copyResult);
+    })();
+  </script>
+</body>
+</html>

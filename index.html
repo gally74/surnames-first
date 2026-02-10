@@ -94,6 +94,22 @@
       color: var(--muted);
       margin-top: 0.5rem;
     }
+    .upload-zone {
+      border: 2px dashed var(--accent);
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+      background: var(--surface);
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--highlight); background: rgba(233,69,96,0.08); }
+    .upload-zone input[type="file"] { display: none; }
+    .upload-zone .zone-label { color: var(--muted); font-size: 0.9rem; }
+    .upload-zone .zone-hint { color: var(--muted); font-size: 0.8rem; margin-top: 0.35rem; }
+    .ocr-progress { font-size: 0.85rem; color: var(--muted); margin-top: 0.5rem; min-height: 1.2rem; }
+    .divider { color: var(--muted); font-size: 0.85rem; margin: 1rem 0 0.5rem; }
   </style>
 </head>
 <body>
@@ -101,11 +117,20 @@
     <h1>Surnames First</h1>
     <p class="subtitle">Reformat name lists for CIE remembrance mass – surname first, then first name(s), dates unchanged. Created by Roy Galvin.</p>
 
+    <label>Upload an image of your name list</label>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="image/*">
+      <div class="zone-label">Drop an image here or click to choose</div>
+      <div class="zone-hint">Screenshot or photo of the list (e.g. from Word)</div>
+    </div>
+    <div class="ocr-progress" id="ocrProgress" aria-live="polite"></div>
+
+    <p class="divider">Or paste text below</p>
     <label for="input">Paste names from Word (one per line, or paste as copied—merged lines are split automatically)</label>
     <textarea id="input" placeholder="John Smith 1927 - 2008&#10;Mary (Molly) Jones 1930 - 2015&#10;Fr. Pat Murphy&#10;Anne Doyle"></textarea>
 
     <div class="actions">
-      <button type="button" class="primary" id="reformat">Reformat</button>
+      <button type="button" class="primary" id="reformat">Reformat text</button>
       <button type="button" class="secondary" id="copy" disabled>Copy result</button>
     </div>
 
@@ -116,12 +141,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script>
     (function () {
       const inputEl = document.getElementById('input');
       const outputEl = document.getElementById('output');
       const reformatBtn = document.getElementById('reformat');
       const copyBtn = document.getElementById('copy');
+      const fileInput = document.getElementById('fileInput');
+      const uploadZone = document.getElementById('uploadZone');
+      const ocrProgress = document.getElementById('ocrProgress');
 
       // Match trailing date suffix: "1927 - 2008" or " - Died 11/01/1987" (hyphen or en-dash)
       const YEAR_RANGE_AT_END = new RegExp('\\s+(\\d{4}\\s*[–\\-]\\s*\\d{4})\\s*$');
@@ -199,16 +228,51 @@
         return surname + ', ' + first + suffix;
       }
 
+      function runReformatOnText(text) {
+        const lines = splitMergedLines(text);
+        return lines.map(formatLine).filter(Boolean).join('\n');
+      }
+
       function reformat() {
         const text = inputEl.value || '';
-        const lines = splitMergedLines(text);
-        const result = lines
-          .map(formatLine)
-          .filter(Boolean)
-          .join('\n');
+        const result = runReformatOnText(text);
         outputEl.value = result;
         copyBtn.disabled = !result;
       }
+
+      function processImageFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        ocrProgress.textContent = 'Extracting text from image…';
+        Tesseract.recognize(file, 'eng', {
+          logger: function (m) {
+            if (m.status) ocrProgress.textContent = m.status + (m.progress ? ' ' + Math.round(m.progress * 100) + '%' : '');
+          }
+        }).then(function (result) {
+          const text = result.data.text || '';
+          ocrProgress.textContent = text ? 'Done. Reformatted ' + splitMergedLines(text).length + ' names.' : 'No text found in image.';
+          const formatted = runReformatOnText(text);
+          outputEl.value = formatted;
+          copyBtn.disabled = !formatted;
+          if (text) inputEl.value = text;
+        }).catch(function (err) {
+          ocrProgress.textContent = 'Error: ' + (err.message || 'Could not read image.');
+        });
+      }
+
+      uploadZone.addEventListener('click', function () { fileInput.click(); });
+      fileInput.addEventListener('change', function () {
+        var f = fileInput.files && fileInput.files[0];
+        if (f) processImageFile(f);
+        fileInput.value = '';
+      });
+      uploadZone.addEventListener('dragover', function (e) { e.preventDefault(); uploadZone.classList.add('dragover'); });
+      uploadZone.addEventListener('dragleave', function () { uploadZone.classList.remove('dragover'); });
+      uploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        var f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) processImageFile(f);
+      });
 
       function copyResult() {
         if (!outputEl.value) return;

@@ -101,7 +101,7 @@
     <h1>Surnames First</h1>
     <p class="subtitle">Reformat name lists for CIE remembrance mass – surname first, then first name(s), dates unchanged. Created by Roy Galvin.</p>
 
-    <label for="input">Paste names from Word (one per line)</label>
+    <label for="input">Paste names from Word (one per line, or paste as copied—merged lines are split automatically)</label>
     <textarea id="input" placeholder="John Smith 1927 - 2008&#10;Mary (Molly) Jones 1930 - 2015&#10;Fr. Pat Murphy&#10;Anne Doyle"></textarea>
 
     <div class="actions">
@@ -126,6 +126,33 @@
       // Match trailing date suffix: "1927 - 2008" or " - Died 11/01/1987" (hyphen or en-dash)
       const YEAR_RANGE_AT_END = new RegExp('\\s+(\\d{4}\\s*[–\\-]\\s*\\d{4})\\s*$');
       const DIED_AT_END = new RegExp('(\\s+[–\\-]\\s*Died\\s+\\d{1,2}/\\d{1,2}/\\d{4})\\s*$', 'i');
+
+      // Split pasted blob when Word merges lines (no newlines): split after year range or Died date, then split name-only runs
+      function splitMergedLines(text) {
+        const lines = text.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+        const result = [];
+        const yearOrDied = new RegExp('(\\d{4}\\s*[–\\-]\\s*\\d{4})\\s+|([–\\-]\\s*Died\\s+\\d{1,2}/\\d{1,2}/\\d{4})\\s+', 'gi');
+        const firstNameThenSurname = new RegExp('\\s+(?=[A-Z][a-z]{2,}\\s+[A-ZO\'][\\w\']+)', 'g');
+        lines.forEach(function (line) {
+          const parts = line.split(yearOrDied);
+          const withDates = [];
+          for (let i = 0; i < parts.length; i += 2) {
+            if (i + 1 < parts.length) withDates.push((parts[i] + parts[i + 1]).trim());
+            else if (parts[i].trim()) withDates.push(parts[i].trim());
+          }
+          withDates.forEach(function (segment) {
+            if (!segment) return;
+            if (/\d{4}/.test(segment)) {
+              result.push(segment);
+            } else {
+              const names = segment.split(firstNameThenSurname).map(function (s) { return s.trim(); }).filter(Boolean);
+              if (names.length) names.forEach(function (n) { result.push(n); });
+              else result.push(segment);
+            }
+          });
+        });
+        return result;
+      }
 
       function extractSuffix(line) {
         let rest = line.trim();
@@ -174,7 +201,7 @@
 
       function reformat() {
         const text = inputEl.value || '';
-        const lines = text.split(/\r?\n/);
+        const lines = splitMergedLines(text);
         const result = lines
           .map(formatLine)
           .filter(Boolean)
